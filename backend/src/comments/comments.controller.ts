@@ -8,10 +8,12 @@ import {
   Body,
   UseGuards,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+
 import { CommentsService } from './comments.service';
 import { Comment } from './comment.entity';
 import { CreateCommentDto, UpdateCommentDto } from './comment.dto';
@@ -25,7 +27,14 @@ export class CommentsController {
   @ApiOperation({ summary: 'Get all comments' })
   @ApiResponse({ status: 200, description: 'List of all comments' })
   async findAll(): Promise<Comment[]> {
-    return this.commentsService.findAll();
+    try {
+      return await this.commentsService.findAll();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to retrieve comments',
+        error.message,
+      );
+    }
   }
 
   @Get(':id')
@@ -33,11 +42,15 @@ export class CommentsController {
   @ApiResponse({ status: 200, description: 'The found comment' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async findOne(@Param('id') id: string): Promise<Comment> {
-    const comment = await this.commentsService.findOne(id);
-    if (!comment) {
+    try {
+      const comment = await this.commentsService.findOne(id);
+      if (!comment) {
+        throw new NotFoundException(`Comment with ID ${id} not found`);
+      }
+      return comment;
+    } catch (error) {
       throw new NotFoundException(`Comment with ID ${id} not found`);
     }
-    return comment;
   }
 
   @Get('blog-posts/:blogPostId')
@@ -49,7 +62,14 @@ export class CommentsController {
   async findByBlogPost(
     @Param('blogPostId') blogPostId: string,
   ): Promise<Comment[]> {
-    return this.commentsService.findByBlogPost(blogPostId);
+    try {
+      return await this.commentsService.findByBlogPost(blogPostId);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to retrieve comments',
+        error.message,
+      );
+    }
   }
 
   @Post('blog-posts/:blogPostId')
@@ -61,7 +81,17 @@ export class CommentsController {
     @Param('blogPostId') blogPostId: string,
     @Body() createCommentDto: CreateCommentDto,
   ): Promise<Comment> {
-    return this.commentsService.create(blogPostId, createCommentDto);
+    try {
+      return await this.commentsService.create({
+        ...createCommentDto,
+        blogPostId: blogPostId,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create comment',
+        error.message,
+      );
+    }
   }
 
   @Put(':id')
@@ -74,14 +104,18 @@ export class CommentsController {
     @Param('id') id: string,
     @Body() updateCommentDto: UpdateCommentDto,
   ): Promise<Comment> {
-    const updatedComment = await this.commentsService.update(
-      id,
-      updateCommentDto,
-    );
-    if (!updatedComment) {
+    try {
+      const updatedComment = await this.commentsService.update(
+        id,
+        updateCommentDto,
+      );
+      if (!updatedComment) {
+        throw new NotFoundException(`Comment with ID ${id} not found`);
+      }
+      return updatedComment;
+    } catch (error) {
       throw new NotFoundException(`Comment with ID ${id} not found`);
     }
-    return updatedComment;
   }
 
   @Delete(':id')
@@ -90,6 +124,10 @@ export class CommentsController {
   @ApiResponse({ status: 404, description: 'Comment not found' })
   @UseGuards(JwtAuthGuard)
   async remove(@Param('id') id: string): Promise<void> {
-    await this.commentsService.remove(id);
+    try {
+      await this.commentsService.remove(id);
+    } catch (error) {
+      throw new NotFoundException(`Comment with ID ${id} not found`);
+    }
   }
 }

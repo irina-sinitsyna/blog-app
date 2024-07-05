@@ -1,9 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Comment } from './comment.entity';
-import { BlogPostsService } from '../blog-posts/blog-posts.service';
 import { CreateCommentDto, UpdateCommentDto } from './comment.dto';
 
 @Injectable()
@@ -11,65 +14,88 @@ export class CommentsService {
   constructor(
     @InjectRepository(Comment)
     private commentsRepository: Repository<Comment>,
-    private readonly blogPostsService: BlogPostsService,
   ) {}
 
   async findAll(): Promise<Comment[]> {
-    return this.commentsRepository.find({ relations: ['blogPost'] });
+    try {
+      return await this.commentsRepository.find({
+        relations: ['blogPost', 'author'],
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to retrieve comments',
+        error.message,
+      );
+    }
   }
 
   async findOne(id: string): Promise<Comment> {
-    const comment = await this.commentsRepository.findOne({
-      where: { id },
-      relations: ['blogPost'],
-    });
-    if (!comment) {
+    try {
+      const comment = await this.commentsRepository.findOne({
+        where: { id },
+        relations: ['blogPost', 'author'],
+      });
+      if (!comment) {
+        throw new NotFoundException(`Comment with ID ${id} not found`);
+      }
+      return comment;
+    } catch (error) {
       throw new NotFoundException(`Comment with ID ${id} not found`);
     }
-    return comment;
   }
 
   async findByBlogPost(blogPostId: string): Promise<Comment[]> {
-    return this.commentsRepository.find({
-      where: { blogPost: { id: blogPostId } },
-      relations: ['blogPost'],
-    });
+    try {
+      return await this.commentsRepository.find({
+        where: { blogPost: { id: blogPostId } },
+        relations: ['user', 'blogPost'],
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to retrieve comments',
+        error.message,
+      );
+    }
   }
 
-  async create(
-    blogPostId: string,
-    createCommentDto: CreateCommentDto,
-  ): Promise<Comment> {
-    const blogPost = await this.blogPostsService.findOne(blogPostId);
-    if (!blogPost) {
-      throw new NotFoundException(`BlogPost with ID ${blogPostId} not found`);
+  async create(createCommentDto: CreateCommentDto): Promise<Comment> {
+    try {
+      const newComment = this.commentsRepository.create(createCommentDto);
+      return await this.commentsRepository.save(newComment);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create comment',
+        error.message,
+      );
     }
-
-    const newComment = this.commentsRepository.create({
-      ...createCommentDto,
-      blogPost,
-    });
-    return this.commentsRepository.save(newComment);
   }
 
   async update(
     id: string,
     updateCommentDto: UpdateCommentDto,
   ): Promise<Comment> {
-    await this.commentsRepository.update(id, updateCommentDto);
-    const updatedComment = await this.commentsRepository.findOne({
-      where: { id },
-      relations: ['blogPost'],
-    });
-    if (!updatedComment) {
+    try {
+      await this.commentsRepository.update(id, updateCommentDto);
+      const updatedComment = await this.commentsRepository.findOne({
+        where: { id },
+        relations: ['blogPost', 'author'],
+      });
+      if (!updatedComment) {
+        throw new NotFoundException(`Comment with ID ${id} not found`);
+      }
+      return updatedComment;
+    } catch (error) {
       throw new NotFoundException(`Comment with ID ${id} not found`);
     }
-    return updatedComment;
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.commentsRepository.delete(id);
-    if (result.affected === 0) {
+    try {
+      const result = await this.commentsRepository.delete(id);
+      if (result.affected === 0) {
+        throw new NotFoundException(`Comment with ID ${id} not found`);
+      }
+    } catch (error) {
       throw new NotFoundException(`Comment with ID ${id} not found`);
     }
   }

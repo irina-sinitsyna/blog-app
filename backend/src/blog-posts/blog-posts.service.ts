@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -13,40 +17,70 @@ export class BlogPostsService {
   ) {}
 
   async findAll(): Promise<BlogPost[]> {
-    return this.blogPostsRepository.find({ relations: ['comments'] });
+    try {
+      return await this.blogPostsRepository.find({
+        relations: ['comments', 'author'],
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to retrieve blog posts',
+        error.message,
+      );
+    }
   }
 
   async findOne(id: string): Promise<BlogPost> {
-    const blogPost = await this.blogPostsRepository.findOne({
-      where: { id },
-      relations: ['comments'],
-    });
-    if (!blogPost) {
+    try {
+      const blogPost = await this.blogPostsRepository.findOne({
+        where: { id },
+        relations: ['comments', 'author'],
+      });
+      if (!blogPost) {
+        throw new NotFoundException(`BlogPost with ID ${id} not found`);
+      }
+      return blogPost;
+    } catch (error) {
       throw new NotFoundException(`BlogPost with ID ${id} not found`);
     }
-    return blogPost;
   }
 
-  async create(blogPostDto: CreateBlogPostDto): Promise<BlogPost> {
-    const newBlogPost = this.blogPostsRepository.create(blogPostDto);
-    return this.blogPostsRepository.save(newBlogPost);
+  async create(createBlogPostDto: CreateBlogPostDto): Promise<BlogPost> {
+    try {
+      const newBlogPost = this.blogPostsRepository.create(createBlogPostDto);
+      return await this.blogPostsRepository.save(newBlogPost);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create blog post',
+        error.message,
+      );
+    }
   }
 
-  async update(id: string, blogPostDto: UpdateBlogPostDto): Promise<BlogPost> {
-    await this.blogPostsRepository.update(id, blogPostDto);
-    const updatedBlogPost = await this.blogPostsRepository.findOne({
-      where: { id },
-      relations: ['comments'],
-    });
-    if (!updatedBlogPost) {
+  async update(
+    id: string,
+    updateBlogPostDto: UpdateBlogPostDto,
+  ): Promise<BlogPost> {
+    try {
+      const result = await this.blogPostsRepository.update(
+        id,
+        updateBlogPostDto,
+      );
+      if (result.affected === 0) {
+        throw new NotFoundException(`BlogPost with ID ${id} not found`);
+      }
+      return await this.findOne(id);
+    } catch (error) {
       throw new NotFoundException(`BlogPost with ID ${id} not found`);
     }
-    return updatedBlogPost;
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.blogPostsRepository.delete(id);
-    if (result.affected === 0) {
+    try {
+      const result = await this.blogPostsRepository.delete(id);
+      if (result.affected === 0) {
+        throw new NotFoundException(`BlogPost with ID ${id} not found`);
+      }
+    } catch (error) {
       throw new NotFoundException(`BlogPost with ID ${id} not found`);
     }
   }

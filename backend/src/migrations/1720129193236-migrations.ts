@@ -11,7 +11,12 @@ export class InitialSchema1625452651510 implements MigrationInterface {
       new Table({
         name: 'users',
         columns: [
-          { name: 'id', type: 'serial', isPrimary: true },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'username', type: 'varchar', isNullable: false },
           { name: 'password', type: 'varchar', isNullable: false },
         ],
@@ -23,7 +28,12 @@ export class InitialSchema1625452651510 implements MigrationInterface {
       new Table({
         name: 'blog_post',
         columns: [
-          { name: 'id', type: 'serial', isPrimary: true },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'title', type: 'varchar', isNullable: false },
           { name: 'content', type: 'text', isNullable: false },
         ],
@@ -35,10 +45,15 @@ export class InitialSchema1625452651510 implements MigrationInterface {
       new Table({
         name: 'comment',
         columns: [
-          { name: 'id', type: 'serial', isPrimary: true },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'author', type: 'varchar', isNullable: false },
           { name: 'content', type: 'text', isNullable: false },
-          { name: 'blogPostId', type: 'integer' },
+          { name: 'blogPostId', type: 'uuid' },
         ],
         foreignKeys: [
           new TableForeignKey({
@@ -56,9 +71,14 @@ export class InitialSchema1625452651510 implements MigrationInterface {
       new Table({
         name: 'auth_tokens',
         columns: [
-          { name: 'id', type: 'serial', isPrimary: true },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'token', type: 'varchar', isNullable: false },
-          { name: 'userId', type: 'integer' },
+          { name: 'userId', type: 'uuid' },
         ],
         foreignKeys: [
           new TableForeignKey({

@@ -1,11 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateCommentDto {
-  @ApiProperty()
-  readonly author: string;
+import { IsNotEmpty, IsString } from 'class-validator';
 
-  @ApiProperty()
-  readonly content: string;
+export class CreateCommentDto {
+  @IsNotEmpty()
+  @IsString()
+  author: string;
+
+  @IsNotEmpty()
+  @IsString()
+  content: string;
+
+  @IsNotEmpty()
+  @IsString()
+  blogPostId: string;
 }
 
 export class UpdateCommentDto {

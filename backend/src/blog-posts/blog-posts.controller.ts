@@ -7,6 +7,8 @@ import {
   Param,
   Body,
   UseGuards,
+  NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation } from '@nestjs/swagger';
 
@@ -25,7 +27,14 @@ export class BlogPostsController {
   @ApiOperation({ summary: 'Get all blog posts' })
   @ApiResponse({ status: 200, description: 'List of all blog posts' })
   async findAll(): Promise<BlogPost[]> {
-    return this.blogPostsService.findAll();
+    try {
+      return await this.blogPostsService.findAll();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to retrieve blog posts',
+        error.message,
+      );
+    }
   }
 
   @Get(':id')
@@ -33,7 +42,11 @@ export class BlogPostsController {
   @ApiResponse({ status: 200, description: 'The found blog post' })
   @ApiResponse({ status: 404, description: 'Blog post not found' })
   async findOne(@Param('id') id: string): Promise<BlogPost> {
-    return this.blogPostsService.findOne(id);
+    try {
+      return await this.blogPostsService.findOne(id);
+    } catch (error) {
+      throw new NotFoundException(`BlogPost with ID ${id} not found`);
+    }
   }
 
   @Post()
@@ -42,7 +55,14 @@ export class BlogPostsController {
   async create(
     @Body() createBlogPostDto: CreateBlogPostDto,
   ): Promise<BlogPost> {
-    return this.blogPostsService.create(createBlogPostDto);
+    try {
+      return await this.blogPostsService.create(createBlogPostDto);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create blog post',
+        error.message,
+      );
+    }
   }
 
   @Put(':id')
@@ -54,7 +74,11 @@ export class BlogPostsController {
     @Param('id') id: string,
     @Body() updateBlogPostDto: UpdateBlogPostDto,
   ): Promise<BlogPost> {
-    return this.blogPostsService.update(id, updateBlogPostDto);
+    try {
+      return await this.blogPostsService.update(id, updateBlogPostDto);
+    } catch (error) {
+      throw new NotFoundException(`BlogPost with ID ${id} not found`);
+    }
   }
 
   @Delete(':id')
@@ -63,6 +87,10 @@ export class BlogPostsController {
   @ApiResponse({ status: 404, description: 'Blog post not found' })
   @UseGuards(JwtAuthGuard)
   async remove(@Param('id') id: string): Promise<void> {
-    await this.blogPostsService.remove(id);
+    try {
+      await this.blogPostsService.remove(id);
+    } catch (error) {
+      throw new NotFoundException(`BlogPost with ID ${id} not found`);
+    }
   }
 }

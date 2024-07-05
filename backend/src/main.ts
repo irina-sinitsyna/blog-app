@@ -1,14 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as dotenv from 'dotenv';
 
 import { AppModule } from './app.module';
-
-import * as dotenv from 'dotenv';
+import { LoggingMiddleware } from './middlewares/LoggingMiddleware';
 dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.use(new LoggingMiddleware().use);
 
   app.enableCors({
     origin: 'http://localhost:5173',

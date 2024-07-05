@@ -14,23 +14,20 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  async login(@Body() body: { username: string; password: string }) {
-    const user = await this.authService.validateUser(
-      body.username,
-      body.password,
-    );
+  async login(@Body() body: { email: string; password: string }) {
+    const user = await this.authService.validateUser(body.email, body.password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { username: user.username, sub: user.id };
+    const payload = { email: user.email, sub: user.id };
     const token = await this.jwtAuthService.signPayload(payload);
 
     return { access_token: token };
   }
 
   @Post('register')
-  async register(@Body() body: { username: string; password: string }) {
-    return this.usersService.createUser(body.username, body.password);
+  async register(@Body() body: { email: string; password: string }) {
+    return this.usersService.createUser(body.email, body.password);
   }
 }

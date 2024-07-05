@@ -12,9 +12,9 @@ import {
 import { ApiTags, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-
 import { CommentsService } from './comments.service';
 import { Comment } from './comment.entity';
+import { CreateCommentDto, UpdateCommentDto } from './comment.dto';
 
 @ApiTags('comments')
 @Controller('comments')
@@ -40,7 +40,7 @@ export class CommentsController {
     return comment;
   }
 
-  @Get('blog-post/:blogPostId')
+  @Get('blog-posts/:blogPostId')
   @ApiOperation({ summary: 'Get comments by Blog Post ID' })
   @ApiResponse({
     status: 200,
@@ -52,29 +52,32 @@ export class CommentsController {
     return this.commentsService.findByBlogPost(blogPostId);
   }
 
-  @Post(':blogPostId')
+  @Post('blog-posts/:blogPostId')
   @ApiOperation({ summary: 'Add a comment to a blog post' })
-  @ApiBody({ type: Comment })
+  @ApiBody({ type: CreateCommentDto })
   @ApiResponse({ status: 201, description: 'The created comment' })
   @UseGuards(JwtAuthGuard)
   async create(
     @Param('blogPostId') blogPostId: string,
-    @Body() comment: Partial<Comment>,
+    @Body() createCommentDto: CreateCommentDto,
   ): Promise<Comment> {
-    return this.commentsService.create(blogPostId, comment);
+    return this.commentsService.create(blogPostId, createCommentDto);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Update a comment by ID' })
-  @ApiBody({ type: Comment })
+  @ApiBody({ type: UpdateCommentDto })
   @ApiResponse({ status: 200, description: 'The updated comment' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
-    @Body() comment: Partial<Comment>,
+    @Body() updateCommentDto: UpdateCommentDto,
   ): Promise<Comment> {
-    const updatedComment = await this.commentsService.update(id, comment);
+    const updatedComment = await this.commentsService.update(
+      id,
+      updateCommentDto,
+    );
     if (!updatedComment) {
       throw new NotFoundException(`Comment with ID ${id} not found`);
     }

@@ -7,7 +7,6 @@ import {
   Param,
   Body,
   UseGuards,
-  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation } from '@nestjs/swagger';
 
@@ -15,6 +14,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 import { BlogPostsService } from './blog-posts.service';
 import { BlogPost } from './blog-post.entity';
+import { CreateBlogPostDto, UpdateBlogPostDto } from './blog-post.dto';
 
 @ApiTags('blog-posts')
 @Controller('blog-posts')
@@ -33,18 +33,16 @@ export class BlogPostsController {
   @ApiResponse({ status: 200, description: 'The found blog post' })
   @ApiResponse({ status: 404, description: 'Blog post not found' })
   async findOne(@Param('id') id: string): Promise<BlogPost> {
-    const blogPost = await this.blogPostsService.findOne(id);
-    if (!blogPost) {
-      throw new NotFoundException(`BlogPost with ID ${id} not found`);
-    }
-    return blogPost;
+    return this.blogPostsService.findOne(id);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new blog post' })
   @ApiResponse({ status: 201, description: 'The created blog post' })
-  async create(@Body() blogPostData: BlogPost): Promise<BlogPost> {
-    return this.blogPostsService.create(blogPostData);
+  async create(
+    @Body() createBlogPostDto: CreateBlogPostDto,
+  ): Promise<BlogPost> {
+    return this.blogPostsService.create(createBlogPostDto);
   }
 
   @Put(':id')
@@ -54,13 +52,9 @@ export class BlogPostsController {
   @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
-    @Body() blogPost: Partial<BlogPost>,
+    @Body() updateBlogPostDto: UpdateBlogPostDto,
   ): Promise<BlogPost> {
-    const updatedBlogPost = await this.blogPostsService.update(id, blogPost);
-    if (!updatedBlogPost) {
-      throw new NotFoundException(`BlogPost with ID ${id} not found`);
-    }
-    return updatedBlogPost;
+    return this.blogPostsService.update(id, updateBlogPostDto);
   }
 
   @Delete(':id')

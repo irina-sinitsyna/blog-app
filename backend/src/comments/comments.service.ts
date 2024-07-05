@@ -3,15 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Comment } from './comment.entity';
-import { BlogPost } from '../blog-posts/blog-post.entity';
+import { BlogPostsService } from '../blog-posts/blog-posts.service';
+import { CreateCommentDto, UpdateCommentDto } from './comment.dto';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectRepository(Comment)
     private commentsRepository: Repository<Comment>,
-    @InjectRepository(BlogPost)
-    private blogPostsRepository: Repository<BlogPost>,
+    private readonly blogPostsService: BlogPostsService,
   ) {}
 
   async findAll(): Promise<Comment[]> {
@@ -38,21 +38,25 @@ export class CommentsService {
 
   async create(
     blogPostId: string,
-    comment: Partial<Comment>,
+    createCommentDto: CreateCommentDto,
   ): Promise<Comment> {
-    const blogPost = await this.blogPostsRepository.findOne({
-      where: { id: blogPostId },
-    });
+    const blogPost = await this.blogPostsService.findOne(blogPostId);
     if (!blogPost) {
       throw new NotFoundException(`BlogPost with ID ${blogPostId} not found`);
     }
 
-    const newComment = this.commentsRepository.create({ ...comment, blogPost });
+    const newComment = this.commentsRepository.create({
+      ...createCommentDto,
+      blogPost,
+    });
     return this.commentsRepository.save(newComment);
   }
 
-  async update(id: string, comment: Partial<Comment>): Promise<Comment> {
-    await this.commentsRepository.update(id, comment);
+  async update(
+    id: string,
+    updateCommentDto: UpdateCommentDto,
+  ): Promise<Comment> {
+    await this.commentsRepository.update(id, updateCommentDto);
     const updatedComment = await this.commentsRepository.findOne({
       where: { id },
       relations: ['blogPost'],

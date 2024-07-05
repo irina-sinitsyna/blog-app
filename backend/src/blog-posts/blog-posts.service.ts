@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { BlogPost } from './blog-post.entity';
+import { CreateBlogPostDto, UpdateBlogPostDto } from './blog-post.dto';
 
 @Injectable()
 export class BlogPostsService {
@@ -26,12 +27,13 @@ export class BlogPostsService {
     return blogPost;
   }
 
-  async create(blogPost: BlogPost): Promise<BlogPost> {
-    return this.blogPostsRepository.save(blogPost);
+  async create(blogPostDto: CreateBlogPostDto): Promise<BlogPost> {
+    const newBlogPost = this.blogPostsRepository.create(blogPostDto);
+    return this.blogPostsRepository.save(newBlogPost);
   }
 
-  async update(id: string, blogPostData: Partial<BlogPost>): Promise<BlogPost> {
-    await this.blogPostsRepository.update(id, blogPostData);
+  async update(id: string, blogPostDto: UpdateBlogPostDto): Promise<BlogPost> {
+    await this.blogPostsRepository.update(id, blogPostDto);
     const updatedBlogPost = await this.blogPostsRepository.findOne({
       where: { id },
       relations: ['comments'],

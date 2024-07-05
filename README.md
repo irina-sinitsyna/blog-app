@@ -132,3 +132,87 @@ For deployment, ensure you have Docker installed on your server. Use the provide
 This application adheres to best practices in software development, including code readability, modularity, and scalability.
 Continuous integration and deployment (CI/CD) pipelines can be set up to automate testing and deployment processes.
 Improvements can be made in error handling, security measures, and performance optimizations based on specific deployment requirements.
+
+# Computational Question:
+
+Please write a stored procedure that creates an amortization schedule (the Spitzer
+Table) for a loan of 36000 and interest of 8% for 36 monthly payments.
+After the 12th payment, you are required to change the loan’s setup - perform a loan
+recycle on the remaining amount (according to the amortization schedule table) with
+a fixed interest of 4.5% for an additional 48 payments.
+
+```sql
+DELIMITER //
+
+CREATE PROCEDURE generate_amortization_schedule()
+BEGIN
+    DECLARE loan_amount DECIMAL(10, 2);
+    DECLARE initial_interest_rate DECIMAL(5, 2);
+    DECLARE second_interest_rate DECIMAL(5, 2);
+    DECLARE initial_payments INT;
+    DECLARE second_payments INT;
+    DECLARE current_balance DECIMAL(10, 2);
+    DECLARE payment_number INT DEFAULT 0;
+    DECLARE payment_date DATE;
+    DECLARE principal DECIMAL(10, 2);
+    DECLARE interest DECIMAL(10, 2);
+
+    -- Initialize loan details
+    SET loan_amount = 36000.00;
+    SET initial_interest_rate = 0.08; -- 8%
+    SET second_interest_rate = 0.045; -- 4.5%
+    SET initial_payments = 36;
+    SET second_payments = 48;
+    SET current_balance = loan_amount;
+
+    -- Create a temporary table to store the amortization schedule
+    CREATE TEMPORARY TABLE IF NOT EXISTS amortization_schedule (
+        payment_number INT,
+        payment_date DATE,
+        principal DECIMAL(10, 2),
+        interest DECIMAL(10, 2),
+        remaining_balance DECIMAL(10, 2)
+    );
+
+    -- Loop through initial payments (first phase)
+    WHILE payment_number < initial_payments DO
+        SET payment_number = payment_number + 1;
+        SET payment_date = DATE_ADD(CURDATE(), INTERVAL payment_number MONTH);
+        SET interest = current_balance * initial_interest_rate / 12;
+        SET principal = (loan_amount * initial_interest_rate / 12) / (1 - POW(1 + initial_interest_rate / 12, -initial_payments));
+        SET current_balance = current_balance - principal;
+
+        -- Insert into amortization schedule
+        INSERT INTO amortization_schedule (payment_number, payment_date, principal, interest, remaining_balance)
+        VALUES (payment_number, payment_date, principal, interest, current_balance);
+    END WHILE;
+
+    -- Loan recycle after the 12th payment
+    IF payment_number = 12 THEN
+        SET initial_payments = initial_payments - 12;
+        SET current_balance = current_balance + (initial_payments * principal);
+        SET initial_payments = initial_payments + second_payments;
+    END IF;
+
+    -- Loop through second payments (second phase)
+    WHILE payment_number < initial_payments + second_payments DO
+        SET payment_number = payment_number + 1;
+        SET payment_date = DATE_ADD(CURDATE(), INTERVAL payment_number MONTH);
+        SET interest = current_balance * second_interest_rate / 12;
+        SET principal = (loan_amount * second_interest_rate / 12) / (1 - POW(1 + second_interest_rate / 12, -second_payments));
+        SET current_balance = current_balance - principal;
+
+        -- Insert into amortization schedule
+        INSERT INTO amortization_schedule (payment_number, payment_date, principal, interest, remaining_balance)
+        VALUES (payment_number, payment_date, principal, interest, current_balance);
+    END WHILE;
+
+    -- Return the amortization schedule
+    SELECT * FROM amortization_schedule;
+
+    -- Clean up
+    DROP TEMPORARY TABLE IF EXISTS amortization_schedule;
+END //
+
+DELIMITER ;
+```

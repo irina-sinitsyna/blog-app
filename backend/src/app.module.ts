@@ -1,11 +1,13 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+
 import { BlogPost } from './blog-posts/blog-post.entity';
 import { Comment } from './comments/comment.entity';
 import { BlogPostsService } from './blog-posts/blog-posts.service';
 import { CommentsService } from './comments/comments.service';
 import { LoggingMiddleware } from './middlewares/LoggingMiddleware';
+import { UserModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { LoggingMiddleware } from './middlewares/LoggingMiddleware';
       synchronize: true,
     }),
     TypeOrmModule.forFeature([BlogPost, Comment]),
+    UserModule,
   ],
   providers: [BlogPostsService, CommentsService],
 })

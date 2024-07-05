@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 import { BlogPostsService } from './blog-posts.service';
 import { BlogPost } from './blog-post.entity';

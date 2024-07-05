@@ -30,8 +30,8 @@ export class BlogPostsService {
     return this.blogPostsRepository.save(blogPost);
   }
 
-  async update(id: string, blogPost: Partial<BlogPost>): Promise<BlogPost> {
-    await this.blogPostsRepository.update(id, blogPost);
+  async update(id: string, blogPostData: Partial<BlogPost>): Promise<BlogPost> {
+    await this.blogPostsRepository.update(id, blogPostData);
     const updatedBlogPost = await this.blogPostsRepository.findOne({
       where: { id },
       relations: ['comments'],

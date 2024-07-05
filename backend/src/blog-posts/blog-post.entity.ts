@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
+
+import { User } from 'src/users/user.entity';
 
 import { Comment } from '../comments/comment.entity';
 
@@ -12,6 +20,9 @@ export class BlogPost {
 
   @Column()
   content: string;
+
+  @ManyToOne(() => User, (user) => user.blogPosts)
+  author: User;
 
   @OneToMany(() => Comment, (comment) => comment.blogPost, { cascade: true })
   comments: Comment[];

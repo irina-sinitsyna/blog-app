@@ -1,12 +1,12 @@
 {
   "type": "postgres",
-  "host": "localhost",
+  "host": "db",
   "port": 5432,
   "username": "postgres",
   "password": "postgres",
-  "database": "postgres",
-  "entities": ["dist/**/*.entity{.ts,.js}"],
-  "migrations": ["dist/migrations/*.js"],
+  "database": "user",
+  "entities": ["src/**/*.entity.ts"],
+  "migrations": ["src/migrations/*.ts"],
   "cli": {
     "migrationsDir": "src/migrations"
   },

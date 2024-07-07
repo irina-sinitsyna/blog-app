@@ -22,21 +22,31 @@ const BlogPosts = () => {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className='flex justify-center items-center min-h-screen'>
+        Loading...
+      </div>
+    );
   }
 
   if (error) {
-    return <div>Error loading posts</div>;
+    return (
+      <div className='flex justify-center items-center min-h-screen'>
+        Error loading posts
+      </div>
+    );
   }
 
   return (
-    <div className='p-4'>
-      <h2 className='text-2xl mb-4'>Blog Posts</h2>
-      <ul>
+    <div className='p-4 min-h-screen bg-gray-100'>
+      <h2 className='text-3xl font-bold mb-6 text-center text-gray-800'>
+        Blog Posts
+      </h2>
+      <ul className='space-y-4'>
         {posts.map((post: any) => (
-          <li key={post.id} className='mb-4 p-4 bg-white shadow-md rounded'>
-            <h3 className='text-xl font-bold'>{post.title}</h3>
-            <p>{post.content}</p>
+          <li key={post.id} className='bg-white shadow-md rounded p-6'>
+            <h3 className='text-xl font-bold mb-2'>{post.title}</h3>
+            <p className='text-gray-700'>{post.content}</p>
           </li>
         ))}
       </ul>

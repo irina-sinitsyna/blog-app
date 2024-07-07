@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+
+import axiosInstance from '../api/base';
 
 interface BlogPost {
   id: string;
@@ -20,8 +21,8 @@ const BlogPostsPage: React.FC = () => {
 
   const fetchPosts = async () => {
     try {
-      const response = await axios.get<BlogPost[]>(
-        'http://localhost:3000/api/blog-posts',
+      const response = await axiosInstance.get<BlogPost[]>(
+        'http://localhost:3000/blog-posts',
       );
       setPosts(response.data);
     } catch (error) {
@@ -31,8 +32,8 @@ const BlogPostsPage: React.FC = () => {
 
   const handleAddPost = async () => {
     try {
-      const response = await axios.post<BlogPost>(
-        'http://localhost:3000/api/blog-posts',
+      const response = await axiosInstance.post<BlogPost>(
+        'http://localhost:3000/blog-posts',
         newPost,
       );
       setPosts([...posts, response.data]);
@@ -44,7 +45,7 @@ const BlogPostsPage: React.FC = () => {
 
   const handleRemovePost = async (postId: string) => {
     try {
-      await axios.delete(`http://localhost:3000/api/blog-posts/${postId}`);
+      await axiosInstance.delete(`http://localhost:3000/blog-posts/${postId}`);
       setPosts(posts.filter((post) => post.id !== postId));
     } catch (error) {
       console.error('Error removing post:', error);
@@ -52,30 +53,48 @@ const BlogPostsPage: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Blog Posts</h2>
-      <div>
-        <input
-          type='text'
-          placeholder='Title'
-          value={newPost.title}
-          onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-        />
-        <textarea
-          placeholder='Content'
-          value={newPost.content}
-          onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-        />
-        <button onClick={handleAddPost}>Add Post</button>
-      </div>
-      <div>
-        {posts.map((post) => (
-          <div key={post.id}>
-            <h3>{post.title}</h3>
-            <p>{post.content}</p>
-            <button onClick={() => handleRemovePost(post.id)}>Remove</button>
-          </div>
-        ))}
+    <div className='flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 w-screen'>
+      <div className='w-full max-w-2xl bg-white shadow-md rounded-lg p-6'>
+        <h2 className='text-3xl font-bold mb-6 text-center text-gray-800'>
+          Blog Posts
+        </h2>
+        <div className='mb-6'>
+          <input
+            type='text'
+            placeholder='Title'
+            value={newPost.title}
+            onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+            className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-4'
+          />
+          <textarea
+            placeholder='Content'
+            value={newPost.content}
+            onChange={(e) =>
+              setNewPost({ ...newPost, content: e.target.value })
+            }
+            className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-4'
+          />
+          <button
+            onClick={handleAddPost}
+            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full'
+          >
+            Add Post
+          </button>
+        </div>
+        <div className='space-y-4'>
+          {posts.map((post) => (
+            <div key={post.id} className='bg-gray-100 p-4 rounded shadow'>
+              <h3 className='text-xl font-bold mb-2'>{post.title}</h3>
+              <p className='text-gray-700'>{post.content}</p>
+              <button
+                onClick={() => handleRemovePost(post.id)}
+                className='mt-2 text-red-500 hover:text-red-700'
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

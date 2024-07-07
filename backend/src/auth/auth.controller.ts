@@ -1,9 +1,18 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
-
-import { UsersService } from 'src/users/users.service';
-
+import {
+  Controller,
+  Post,
+  Body,
+  UnauthorizedException,
+  UseGuards,
+  ConflictException,
+  Get,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthService } from './jwt.service';
+import { UsersService } from 'src/users/users.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @Controller('auth')
 export class AuthController {
@@ -11,6 +20,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly jwtAuthService: JwtAuthService,
     private readonly usersService: UsersService,
+    private readonly tokenBlacklistService: TokenBlacklistService,
   ) {}
 
   @Post('login')
@@ -28,6 +38,30 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() body: { email: string; password: string }) {
-    return this.usersService.createUser(body.email, body.password);
+    const hashedPassword = await this.authService.hashPassword(body.password);
+    const newUser = await this.usersService.createUser(
+      body.email,
+      hashedPassword,
+    );
+
+    const payload = { email: newUser.email, sub: newUser.id };
+    const token = await this.jwtAuthService.signPayload(payload);
+
+    return { access_token: token };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  logout(@Req() req: Request) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Missing or invalid JWT token');
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (token) {
+      this.tokenBlacklistService.add(token);
+    }
+    return { message: 'Logged out successfully' };
   }
 }

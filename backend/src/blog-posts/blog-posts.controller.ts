@@ -52,6 +52,7 @@ export class BlogPostsController {
   @Post()
   @ApiOperation({ summary: 'Create a new blog post' })
   @ApiResponse({ status: 201, description: 'The created blog post' })
+  @UseGuards(JwtAuthGuard)
   async create(
     @Body() createBlogPostDto: CreateBlogPostDto,
   ): Promise<BlogPost> {

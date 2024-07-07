@@ -8,9 +8,17 @@ import { BlogPostsService } from './blog-posts/blog-posts.service';
 import { CommentsService } from './comments/comments.service';
 import { LoggingMiddleware } from './middlewares/LoggingMiddleware';
 import { UserModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { BlogPostsController } from './blog-posts/blog-posts.controller';
+import { CommentsController } from './comments/comments.controller';
 import { User } from './users/user.entity';
+import { UserController } from './users/users.controller';
 import { UsersService } from './users/users.service';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
+import { TokenBlacklistModule } from './auth/token-blacklist.module';
 
 @Module({
   imports: [
@@ -28,8 +36,23 @@ import { AuthService } from './auth/auth.service';
     }),
     TypeOrmModule.forFeature([BlogPost, Comment, User]),
     UserModule,
+    AuthModule,
+    TokenBlacklistModule,
   ],
-  providers: [BlogPostsService, CommentsService, UsersService, AuthService],
+  controllers: [
+    AuthController,
+    AppController,
+    BlogPostsController,
+    CommentsController,
+    UserController,
+  ],
+  providers: [
+    AuthService,
+    AppService,
+    BlogPostsService,
+    CommentsService,
+    UsersService,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

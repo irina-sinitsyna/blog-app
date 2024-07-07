@@ -15,11 +15,14 @@ services:
     ports:
       - '3001:3000'
     environment:
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=test
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - JWT_SECRET=${JWT_SECRET}
+      - DB_SYNCHRONIZE=${DB_SYNCHRONIZE}
+      - DB_LOGGING=${DB_LOGGING}
     depends_on:
       - db
 
@@ -28,7 +31,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: test
+      POSTGRES_DB: postgres
     ports:
       - '5432:5432'
     volumes:
